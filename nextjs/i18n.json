@@ -1,0 +1,8 @@
+{
+  "locales": ["en-GB", "th"],
+  "defaultLocale": "en-GB",
+  "pages": {
+    "*": ["common", "navbar"],
+    "/about": ["about"]
+  }
+}

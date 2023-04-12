@@ -1,0 +1,136 @@
+swagger: "2.0"
+info:
+  title: Sample API
+  description: Optional multiline or single-line description in HTML.
+  version: 0.0.1
+
+paths:
+  /api/login:
+    post:
+      summary: "Login API"
+      description: ""
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Created user object"
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        default:
+          description: "successful operation"
+
+  /api/register:
+    post:
+      summary: "Register API"
+      description: ""
+
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Created user object"
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        default:
+          description: "successful operation"
+  /api/users:
+    get:
+      summary: "Get all users"
+      description: ""
+
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Created user object"
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        default:
+          description: "successful operation"
+  /api/user:
+    post:
+      summary: "Create a new user"
+      description: ""
+
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Created user object"
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        default:
+          description: "successful operation"
+    put:
+      summary: "Update user"
+      description: ""
+
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Created user object"
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        default:
+          description: "successful operation"
+  /api/user/:id:
+    get:
+      summary: "Get user by id"
+      description: ""
+
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Created user object"
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        default:
+          description: "successful operation"
+    delete:
+      summary: "Delete user by id"
+      description: ""
+
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Created user object"
+          required: true
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        default:
+          description: "successful operation"
+
+definitions:
+  User:
+    type: "object"
+    properties:
+      id:
+        type: "object"
+        format: "string"
+      username:
+        type: "string"
+      firstName:
+        type: "string"
+      lastName:
+        type: "string"
+    xml:
+      name: "User"
+  ApiResponse:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      type:
+        type: "string"
+      message:
+        type: "string"
