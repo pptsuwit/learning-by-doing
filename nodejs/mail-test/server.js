@@ -1,5 +1,5 @@
-const API_KEY = "13f36368f00e78dd619c8666c12ac658-c76388c3-3db5203a";
-const DOMAIN = "sandbox97d4418d26674b8f84ca7d1cb11ec317.mailgun.org";
+const API_KEY = "";
+const DOMAIN = "";
 const mailgun = require("mailgun-js")({ apiKey: API_KEY, domain: DOMAIN });
 
 sendMail = function (sender_email, receiver_email, email_subject, email_body) {
@@ -16,8 +16,8 @@ sendMail = function (sender_email, receiver_email, email_subject, email_body) {
   });
 };
 
-const sender_email = "tiiuuyx@gmail.com";
-const receiver_email = "pptsuwit@gmail.com";
+const sender_email = "";
+const receiver_email = "";
 const email_subject = "Mailgun Demo";
 const email_body = "Greetings from geeksforgeeks";
 
