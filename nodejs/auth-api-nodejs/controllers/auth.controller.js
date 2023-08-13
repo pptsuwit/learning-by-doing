@@ -1,24 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const Joi = require("joi");
-const validateRequest = require("_middleware/validate-request");
-const authorize = require("_middleware/authorize");
-const userService = require("./user.service");
+const validateRequest = require("../_middleware/validate-request");
+const authorize = require("../_middleware/authorize");
+const service = require("../services/auth.service");
 
 // routes
 router.post("/refresh-token", refreshToken);
 router.post("/revoke-token", authorize(), revokeTokenSchema, revokeToken);
 router.get("/:id/refresh-tokens", authorize(), getRefreshTokens);
 
-router.post("/login", authenticateSchema, authenticate);
+router.post("/login", loginSchema, login);
 router.post("/register", registerSchema, register);
-
-router.get("/users", authorize(), getAll);
-router.get("/user/:id", authorize(), getById);
-
-router.post("/user", authorize(), createUser);
-router.put("/user", authorize(), updateUserById);
-router.delete("/user/:id", authorize(), deleteById);
 
 module.exports = router;
 
@@ -32,7 +25,7 @@ function registerSchema(req, res, next) {
   validateRequest(req, next, schema);
 }
 
-function authenticateSchema(req, res, next) {
+function loginSchema(req, res, next) {
   const schema = Joi.object({
     username: Joi.string().required(),
     password: Joi.string().required(),
@@ -40,11 +33,11 @@ function authenticateSchema(req, res, next) {
   validateRequest(req, next, schema);
 }
 
-function authenticate(req, res, next) {
+function login(req, res, next) {
   const { username, password } = req.body;
   const ipAddress = req.ip;
-  userService
-    .authenticate({ username, password, ipAddress })
+  service
+    .login({ username, password, ipAddress })
     .then(({ refreshToken, ...user }) => {
       setTokenCookie(res, refreshToken);
       res.json(user);
@@ -54,28 +47,8 @@ function authenticate(req, res, next) {
 
 function register(req, res, next) {
   const { firstname, lastname, username, password } = req.body;
-  userService
+  service
     .register({ firstname, lastname, username, password })
-    .then((user) => {
-      res.json(user);
-    })
-    .catch(next);
-}
-
-function createUser(req, res, next) {
-  const { firstname, lastname, username, password } = req.body;
-  userService
-    .register({ firstname, lastname, username, password })
-    .then((user) => {
-      res.json(user);
-    })
-    .catch(next);
-}
-
-function updateUserById(req, res, next) {
-  const { id, firstName, lastName, username } = req.body;
-  userService
-    .updateUserById({ id, firstName, lastName, username })
     .then((user) => {
       res.json(user);
     })
@@ -85,7 +58,7 @@ function updateUserById(req, res, next) {
 function refreshToken(req, res, next) {
   const token = req.cookies.refreshToken;
   const ipAddress = req.ip;
-  userService
+  service
     .refreshToken({ token, ipAddress })
     .then(({ refreshToken, ...user }) => {
       setTokenCookie(res, refreshToken);
@@ -113,37 +86,9 @@ function revokeToken(req, res, next) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  userService
+  service
     .revokeToken({ token, ipAddress })
     .then(() => res.json({ message: "Token revoked" }))
-    .catch(next);
-}
-
-function getAll(req, res, next) {
-  userService
-    .getAll()
-    .then((users) => res.json(users))
-    .catch(next);
-}
-
-function getById(req, res, next) {
-  // regular users can get their own record and admins can get any record
-  if (req.params.id !== req.user.id) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  userService
-    .getById(req.params.id)
-    .then((user) => (user ? res.json(user) : res.sendStatus(404)))
-    .catch(next);
-}
-
-function deleteById(req, res, next) {
-  // regular users can get their own record and admins can get any record
-
-  userService
-    .deleteById(req.params.id)
-    .then((user) => (user ? res.json(user) : res.sendStatus(404)))
     .catch(next);
 }
 
@@ -153,14 +98,11 @@ function getRefreshTokens(req, res, next) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  userService
+  service
     .getRefreshTokens(req.params.id)
     .then((tokens) => (tokens ? res.json(tokens) : res.sendStatus(404)))
     .catch(next);
 }
-// router.post("/user", authorize(), createUser);
-// router.put("/user", authorize(), updateUser);
-// helper functions
 
 function setTokenCookie(res, token) {
   // create http only cookie with refresh token that expires in 7 days

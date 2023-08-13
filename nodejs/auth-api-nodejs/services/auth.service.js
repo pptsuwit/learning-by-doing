@@ -1,42 +1,129 @@
 const jwt = require("jsonwebtoken");
-const dbo = require("../db/conn");
+const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
+const db = require("../db/conn.js");
+
 module.exports = {
-  authenticate,
-  getAll,
-  omitPassword,
+  login,
+  register,
+  refreshToken,
+  revokeToken,
 };
+async function register({ username, password, ipAddress }) {
+  const user = await db.User.findOne({ username });
 
-async function authenticate({ username, password }) {
-  console.log(username, password);
-  let db_connect = dbo.getDB();
-  // const users = await db_connect.collection("users").find({}).toArray();
-  const user = await db_connect.collection("users").findOne({
-    username: username,
-    password: password,
-  });
+  if (!user || !bcrypt.compareSync(password, user.password)) {
+    throw "Username or password is incorrect";
+  }
 
-  if (!user) throw "Username or password is incorrect";
+  // authentication successful so generate jwt and refresh tokens
+  const jwtToken = generateJwtToken(user);
+  const refreshToken = generateRefreshToken(user, ipAddress);
 
-  // create a jwt token that is valid for 7 days
-  const token = jwt.sign({ sub: user.id }, process.env.SECRET_JWT_TOKEN, {
-    expiresIn: "7d",
-  });
+  // save refresh token
+  await refreshToken.save();
 
+  // return basic details and tokens
   return {
-    ...omitPassword(user),
-    token,
+    ...basicDetails(user),
+    jwtToken,
+    refreshToken: refreshToken.token,
   };
 }
 
-async function getAll() {
-  let db_connect = dbo.getDB("test_db");
-  const users = await db_connect.collection("users").find({}).toArray();
-  return users.map((u) => omitPassword(u));
+async function login({ username, password, ipAddress }) {
+  const user = await db.User.findOne({ username });
+  if (!user || !bcrypt.compareSync(password, user.password)) {
+    throw "Username or password is incorrect";
+  }
+
+  // authentication successful so generate jwt and refresh tokens
+  const jwtToken = generateJwtToken(user);
+  const refreshToken = generateRefreshToken(user, ipAddress);
+
+  // save refresh token
+  await refreshToken.save();
+
+  // return basic details and tokens
+  return {
+    ...basicDetails(user),
+    jwtToken,
+    refreshToken: refreshToken.token,
+  };
 }
 
-// helper functions
+async function register({ firstname, lastname, username, password }) {
+  const user = await db.User.create({
+    firstName: firstname,
+    lastName: lastname,
+    username: username,
+    password: bcrypt.hashSync(password, 10),
+  });
 
-function omitPassword(user) {
-  const { password, ...userWithoutPassword } = user;
-  return userWithoutPassword;
+  return {
+    ...basicDetails(user),
+  };
+}
+
+async function refreshToken({ token, ipAddress }) {
+  const refreshToken = await getRefreshToken(token);
+  const { user } = refreshToken;
+
+  // replace old refresh token with a new one and save
+  const newRefreshToken = generateRefreshToken(user, ipAddress);
+  refreshToken.revoked = Date.now();
+  refreshToken.revokedByIp = ipAddress;
+  refreshToken.replacedByToken = newRefreshToken.token;
+  await refreshToken.save();
+  await newRefreshToken.save();
+
+  // generate new jwt
+  const jwtToken = generateJwtToken(user);
+
+  // return basic details and tokens
+  return {
+    ...basicDetails(user),
+    jwtToken,
+    refreshToken: newRefreshToken.token,
+  };
+}
+
+async function revokeToken({ token, ipAddress }) {
+  const refreshToken = await getRefreshToken(token);
+
+  // revoke token and save
+  refreshToken.revoked = Date.now();
+  refreshToken.revokedByIp = ipAddress;
+  await refreshToken.save();
+}
+
+async function getRefreshToken(token) {
+  const refreshToken = await db.RefreshToken.findOne({ token }).populate("user");
+  if (!refreshToken || !refreshToken.isActive) throw "Invalid token";
+  return refreshToken;
+}
+
+function generateJwtToken(user) {
+  // create a jwt token containing the user id that expires in 15 minutes
+  return jwt.sign({ id: user.id }, process.env.SECRET_JWT_TOKEN, {
+    expiresIn: "3m",
+  });
+}
+
+function generateRefreshToken(user, ipAddress) {
+  // create a refresh token that expires in 7 days
+  return new db.RefreshToken({
+    user: user.id,
+    token: randomTokenString(),
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    createdByIp: ipAddress,
+  });
+}
+function randomTokenString() {
+  return crypto.randomBytes(40).toString("hex");
+}
+
+function basicDetails(user) {
+  const { id, firstName, lastName, username } = user;
+  return { id, firstName, lastName, username };
 }

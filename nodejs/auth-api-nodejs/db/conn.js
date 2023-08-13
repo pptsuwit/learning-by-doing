@@ -1,22 +1,21 @@
-const { MongoClient } = require("mongodb");
-const Db = process.env.DATABASE_URI;
-const client = new MongoClient(Db, {
+const mongoose = require("mongoose");
+const connectionOptions = {
+  // useCreateIndex: true,
+  // useNewUrlParser: true,
+  // useUnifiedTopology: true,
+  // useFindAndModify: false,
   useNewUrlParser: true,
   useUnifiedTopology: true,
-});
-var _db;
-module.exports = {
-  connectToServer: function (callback) {
-    client.connect(function (error, db) {
-      if (db) {
-        _db = db.db(process.env.DATABASE_NAME);
-
-        console.log("Successfully connected to DB.");
-      }
-      return callback(error);
-    });
-  },
-  getDB: function () {
-    return _db;
-  },
 };
+mongoose.connect(process.env.DATABASE_URL || process.env.connectionString, connectionOptions);
+mongoose.Promise = global.Promise;
+
+module.exports = {
+  User: require("../models/user.model"),
+  RefreshToken: require("../models/refresh-token.model"),
+  isValidId,
+};
+
+function isValidId(id) {
+  return mongoose.Types.ObjectId.isValid(id);
+}
