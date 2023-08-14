@@ -71,3 +71,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+nodejs/auth-ts-nodejs/dist
