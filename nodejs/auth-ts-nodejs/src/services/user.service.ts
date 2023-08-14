@@ -13,61 +13,17 @@ export default {
 };
 
 async function getAll() {
-  const users = await db.User.find();
-  return users.map((users: userModel) => userDetails(users));
+  const entity = await db.User.find();
+  return entity.map((entity: userModel) => userDetails(entity));
 }
 
 async function getById(id: string) {
-  const user = await getUser(id);
-  return userDetails(user);
-}
-
-async function deleteById(id: string) {
-  const user = await deleteUser(id);
-  return userDetails(user);
-}
-
-async function getRefreshTokens(userId: string) {
-  await getUser(userId);
-
-  const refreshTokens = await db.RefreshToken.find({ user: userId });
-  return refreshTokens;
-}
-
-async function updateUserById({ id, firstName, lastName, username }: userModel) {
-  const user = await updateUser({ id, firstName, lastName, username });
-  return userDetails(user);
-}
-
-// helper functions
-
-async function deleteUser(id: string) {
-  if (!db.isValidId(id)) throw new Error("User not found");
-  const user = await db.User.findByIdAndDelete(id);
-  if (!user) throw new Error("User not found");
-  return user;
-}
-
-async function getUser(id: string) {
-  if (!db.isValidId(id)) throw new Error("User not found");
-  const user = await db.User.findById(id);
-  if (!user) throw new Error("User not found");
-  return user;
-}
-
-async function updateUser({ id, firstName, lastName, username }: userModel) {
-  if (!db.isValidId(id)) throw new Error("User not found");
-  const user = await db.User.findByIdAndUpdate(id, {
-    firstName,
-    lastName,
-    username,
-  });
-  if (!user) throw new Error("User not found");
-  return user;
+  const entity = await getUser(id);
+  return userDetails(entity);
 }
 
 async function createUser({ firstName, lastName, username, password }: registerModel) {
-  const user = await db.User.create({
+  const entity = await db.User.create({
     firstName: firstName,
     lastName: lastName,
     username: username,
@@ -75,6 +31,49 @@ async function createUser({ firstName, lastName, username, password }: registerM
   });
 
   return {
-    ...userDetails(user),
+    ...userDetails(entity),
   };
+}
+async function updateUserById({ id, firstName, lastName, username }: userModel) {
+  await updateUser({ id, firstName, lastName, username });
+  const entity = await getUser(id);
+  return userDetails(entity);
+}
+
+async function deleteById(id: string) {
+  const entity = await deleteUser(id);
+  return userDetails(entity);
+}
+
+// db functions
+async function getUser(id: string) {
+  if (!db.isValidId(id)) throw new Error("User not found");
+  const entity = await db.User.findById(id);
+  if (!entity) throw new Error("User not found");
+  return entity;
+}
+
+async function getRefreshTokens(id: string) {
+  await getUser(id);
+
+  const refreshTokens = await db.RefreshToken.find({ entity: id });
+  return refreshTokens;
+}
+
+async function updateUser({ id, firstName, lastName, username }: userModel) {
+  if (!db.isValidId(id)) throw new Error("User not found");
+  const entity = await db.User.findByIdAndUpdate(id, {
+    firstName,
+    lastName,
+    username,
+  });
+  if (!entity) throw new Error("User not found");
+  return entity;
+}
+
+async function deleteUser(id: string) {
+  if (!db.isValidId(id)) throw new Error("User not found");
+  const entity = await db.User.findByIdAndDelete(id);
+  if (!entity) throw new Error("User not found");
+  return entity;
 }

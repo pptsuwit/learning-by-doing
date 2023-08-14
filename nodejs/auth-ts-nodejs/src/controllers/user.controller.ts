@@ -5,7 +5,7 @@ import service from "../services/user.service";
 import { userModel } from "../models/user.model";
 const router = express.Router();
 
-router.get("/users", authorize, getAll);
+router.get("/user", authorize, getAll);
 router.get("/user/:id", authorize, getById);
 
 router.post("/user", authorize, create);
@@ -28,6 +28,7 @@ async function update(req: Request, res: Response, next: NextFunction) {
   const { id, firstName, lastName, username } = req.body;
   try {
     const user = await service.updateUserById({ id, firstName, lastName, username });
+
     res.json(user);
   } catch (error) {
     next(error);
@@ -47,7 +48,6 @@ async function getById(req: Request, res: Response, next: NextFunction) {
   // if (req.params.id !== req.user?.id) {
   //   return res.status(401).json({ message: "Unauthorized" });
   // }
-
   try {
     const user = await service.getById(req.params.id);
     user ? res.json(user) : res.sendStatus(404);
