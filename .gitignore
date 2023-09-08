@@ -72,3 +72,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 nodejs/auth-ts-nodejs/dist
+nodejs/auth-ts-nodejs/coverage

@@ -3,10 +3,11 @@ import { customerModel, createCustomerModel } from "../models/customer.model";
 export default {
   getAll,
   getById,
-  getRefreshTokens,
   deleteById,
   updateCustomerById,
   createCustomer,
+  exportToExcel,
+  // exportToPDF,
 };
 
 async function getAll() {
@@ -34,6 +35,7 @@ async function createCustomer({ firstName, lastName, email, phone, birthdate, ad
     ...details(entity),
   };
 }
+
 async function updateCustomerById({ id, customerId, firstName, lastName, email, phone, birthdate, address }: customerModel) {
   await updateCustomer({ id, customerId, firstName, lastName, email, phone, birthdate, address });
   const entity = await getCustomer(id);
@@ -47,21 +49,14 @@ async function deleteById(id: string) {
 
 // db functions
 async function getCustomer(id: string) {
-  if (!db.isValidId(id)) throw new Error("Customer not found");
+  if (!db.isValidId(id)) throw new Error("Not found");
   const entity = await db.Customer.findById(id);
-  if (!entity) throw new Error("Customer not found");
+  if (!entity) throw new Error("Not found");
   return entity;
 }
 
-async function getRefreshTokens(userId: string) {
-  await getCustomer(userId);
-
-  const refreshTokens = await db.RefreshToken.find({ entity: userId });
-  return refreshTokens;
-}
-
 async function updateCustomer({ id, firstName, lastName, email, phone, birthdate, address }: customerModel) {
-  if (!db.isValidId(id)) throw new Error("Customer not found");
+  if (!db.isValidId(id)) throw new Error("Not found");
   const entity = await db.Customer.findByIdAndUpdate(id, {
     firstName,
     lastName,
@@ -70,17 +65,55 @@ async function updateCustomer({ id, firstName, lastName, email, phone, birthdate
     birthdate,
     address,
   });
-  if (!entity) throw new Error("Customer not found");
+  if (!entity) throw new Error("Not found");
   return entity;
 }
 
 async function deleteCustomer(id: string) {
-  if (!db.isValidId(id)) throw new Error("Customer not found");
+  if (!db.isValidId(id)) throw new Error("Not found");
   const entity = await db.Customer.findByIdAndDelete(id);
-  if (!entity) throw new Error("Customer not found");
+  if (!entity) throw new Error("Not found");
   return entity;
 }
+
 export function details(item: customerModel) {
   const { id, customerId, firstName, lastName, email, phone, birthdate, address } = item;
   return { id, customerId, firstName, lastName, email, phone, birthdate, address };
+}
+
+import * as ExcelJS from "exceljs";
+export async function exportToExcel(filePath: string) {
+  // Create a new workbook and worksheet
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Sheet 1");
+
+  const header = ["customerId", "firstName", "lastName", "email", "phone", "birthdate", "address"];
+  const entity = await getAll();
+
+  // Add header row
+  worksheet.addRow(header);
+  entity.map((item: customerModel) => {
+    const { customerId, firstName, lastName, email, phone, birthdate, address } = item;
+    worksheet.addRow([customerId, firstName, lastName, email, phone, birthdate, address]);
+  });
+  // Define styles
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true };
+  headerRow.alignment = { vertical: "middle", horizontal: "center" };
+
+  const dataRows = worksheet.getRows(2, entity.length + 2);
+  dataRows?.forEach((row) => {
+    row.alignment = { vertical: "middle", horizontal: "center" };
+  });
+  // Set column widths (e.g., width of column A to 15 and column B to 10)
+  worksheet.getColumn(1).width = 13;
+  worksheet.getColumn(2).width = 13;
+  worksheet.getColumn(3).width = 13;
+  worksheet.getColumn(4).width = 30;
+  worksheet.getColumn(5).width = 15;
+  worksheet.getColumn(6).width = 13;
+  worksheet.getColumn(7).width = 35;
+
+  // Save the workbook to a file
+  await workbook.xlsx.writeFile(filePath);
 }

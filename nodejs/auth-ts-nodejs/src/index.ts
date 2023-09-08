@@ -1,18 +1,10 @@
-// import "rootpath";
 import "dotenv/config";
-const express = require("express");
 // import cookieParser from "cookie-parser";
 // const cors = require("cors");
-import errorHandler from "./middlewares/error-handler";
-import userControllerRouter from "./controllers/user.controller";
-import authControllerRouter from "./controllers/auth.controller";
-import customerControllerRouter from "./controllers/customer.controller";
 // import swaggerRouter from "./_helpers/swagger";
+import createServer from "./utils/server";
+const app = createServer();
 
-const app = express();
-
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
 // app.use(cookieParser());
 
 // app.use(
@@ -24,12 +16,7 @@ app.use(express.json());
 //   })
 // );
 
-app.use("/api", userControllerRouter);
-app.use("/api", authControllerRouter);
-app.use("/api", customerControllerRouter);
 // app.use("/api-docs", swaggerRouter);
-
-app.use(errorHandler);
 
 const port: number = process.env.NODE_ENV === "production" ? (process.env.PORT ? parseInt(process.env.PORT) : 80) : 5000;
 app.listen(port, () => {

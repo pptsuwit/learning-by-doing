@@ -9,9 +9,9 @@ const db = require("../db/connect");
 export default {
   login,
   register,
-  refreshToken,
-  revokeToken,
-  getRefreshToken,
+  // refreshToken,
+  // revokeToken,
+  // getRefreshToken,
 };
 
 async function login({ username, password, ipAddress }: loginModel) {
@@ -42,42 +42,43 @@ async function register({ firstName, lastName, username, password }: registerMod
   };
 }
 
-async function refreshToken({ token, ipAddress }: refreshTokenModel) {
-  const refreshToken = await getRefreshToken(token);
-  const { user } = refreshToken;
+// async function refreshToken({ token, ipAddress }: refreshTokenModel) {
+//   const refreshToken = await getRefreshToken(token);
+//   const { user } = refreshToken;
 
-  refreshToken.revoked = Date.now();
-  refreshToken.revokedByIp = ipAddress;
+//   refreshToken.revoked = Date.now();
+//   refreshToken.revokedByIp = ipAddress;
 
-  const newRefreshToken = generateRefreshToken(user, ipAddress);
-  refreshToken.replacedByToken = newRefreshToken.token;
+//   const newRefreshToken = generateRefreshToken(user, ipAddress);
+//   refreshToken.replacedByToken = newRefreshToken.token;
 
-  await refreshToken.save();
-  await newRefreshToken.save();
+//   await refreshToken.save();
+//   await newRefreshToken.save();
 
-  const { jwtToken, refreshToken: refresh } = generateTokens(user, ipAddress);
+//   const { jwtToken, refreshToken: refresh } = generateTokens(user, ipAddress);
 
-  return {
-    ...userDetails(user),
-    jwtToken,
-    refreshToken: refresh,
-  };
-}
+//   return {
+//     ...userDetails(user),
+//     jwtToken,
+//     refreshToken: refresh,
+//   };
+// }
 
-async function revokeToken({ token, ipAddress }: revokeTokenModel) {
-  const refreshToken = await getRefreshToken(token);
+// async function revokeToken({ token, ipAddress }: revokeTokenModel) {
+//   const refreshToken = await getRefreshToken(token);
 
-  refreshToken.revoked = Date.now();
-  refreshToken.revokedByIp = ipAddress;
+//   refreshToken.revoked = Date.now();
+//   refreshToken.revokedByIp = ipAddress;
 
-  await refreshToken.save();
-}
+//   await refreshToken.save();
+// }
 
-async function getRefreshToken(token: string) {
-  const refreshToken = await db.RefreshToken.findOne({ token }).populate("user");
-  if (!refreshToken || !refreshToken.isActive) throw new Error("Invalid token");
-  return refreshToken;
-}
+// async function getRefreshToken(id: string) {
+//   const refreshToken = await db.RefreshToken.findOne({ user: id }).populate("user");
+//   console.log(refreshToken);
+//   if (!refreshToken || !refreshToken) throw new Error("Invalid token x");
+//   return refreshToken;
+// }
 
 function generateTokens(user: userModel, ipAddress: string) {
   const jwtToken = generateJwtToken(user);
@@ -87,7 +88,7 @@ function generateTokens(user: userModel, ipAddress: string) {
 }
 
 function generateJwtToken(user: userModel) {
-  const secret = process.env.SECRET_JWT_TOKEN || "";
+  const secret = process.env.SECRET_JWT_TOKEN as string;
   return jwt.sign({ id: user.id }, secret, {
     expiresIn: "3d",
   });

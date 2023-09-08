@@ -27,7 +27,7 @@ async function createUser({ firstName, lastName, username, password }: registerM
     firstName: firstName,
     lastName: lastName,
     username: username,
-    password: bcrypt.hash(password, 10),
+    password: bcrypt.hashSync(password, 10),
   });
 
   return {
