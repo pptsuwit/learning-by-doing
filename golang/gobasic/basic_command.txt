@@ -1,0 +1,9 @@
+#package
+https://pkg.go.dev/
+#commands
+https://pkg.go.dev/cmd/go
+
+#initail
+go mod init <name>
+
+go run <name>
